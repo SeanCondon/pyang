@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<subtop xmlns="http://example.com/a" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://example.com/a amod.xsd">
+    <baz1>true</baz1>
+    <baz2 quux="4">0x12</baz2>
+</subtop>
