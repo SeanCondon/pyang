@@ -2,6 +2,9 @@
 [![Coverage Status](https://coveralls.io/repos/mbj4668/pyang/badge.svg)](https://coveralls.io/r/mbj4668/pyang)
 
 ## News ##
+**2018-02-06 - Version 1.7.3 bis**
+Added in XSD Plugin
+
 **2017-06-27 - Version 1.7.3 released**
 
   * Handle multiple rc:yang-data statements.  This bug caused
