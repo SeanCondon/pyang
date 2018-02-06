@@ -1,0 +1,112 @@
+<?xml version="1.0" ?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://example.com/a" version="1.0" xmlns:a="http://example.com/a" xmlns:b="http://example.com/b" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:import namespace="http://example.com/b" schemaLocation="bmod.xsd"/>
+	<xs:element name="subtop" type="a:subtop_t"/>
+	<xs:complexType name="subtop_t">
+		<xs:sequence>
+			<xs:element maxOccurs="1" minOccurs="0" name="baz" type="a:subtop_baz_t"/>
+			<xs:element maxOccurs="1" minOccurs="0" name="baz" type="b:subtop_baz_t"/>
+			<xs:element maxOccurs="unbounded" minOccurs="0" name="pac" type="b:subtop_pac_t"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="subtop_baz_t">
+		<xs:restriction base="xs:boolean"/>
+	</xs:simpleType>
+	<xs:element name="top" type="a:top_t"/>
+	<xs:complexType name="top_t">
+		<xs:sequence>
+			<xs:element default="-1" maxOccurs="1" minOccurs="0" name="foo" type="a:top_foo_t"/>
+			<!--Note XSD 1.0 does not support <xs:any/> inside the same container (sequence) as other elements. A solution is to comment out the other elements and comment in the <xs:any/>leaving the whole container (e.g. sequence) as type xs:any-->
+			<!--<xs:any id="junk" maxOccurs="unbounded" processContents="lax"/>-->
+			<xs:element maxOccurs="unbounded" minOccurs="0" name="pac" type="a:top_pac_t"/>
+			<xs:element maxOccurs="1" minOccurs="0" name="bar" type="a:top_bar_t"/>
+			<xs:element maxOccurs="1" minOccurs="0" name="barstr" type="a:top_barstr_t"/>
+			<xs:element maxOccurs="unbounded" minOccurs="0" name="baz" type="a:top_baz_t"/>
+			<xs:element maxOccurs="1" minOccurs="0" name="mek" type="a:top_mek_t"/>
+			<xs:choice>
+				<xs:sequence>
+					<xs:element maxOccurs="1" minOccurs="0" name="e" type="a:top_top_top_e_t"/>
+				</xs:sequence>
+			</xs:choice>
+			<xs:element ref="b:bar"/>
+			<xs:element ref="b:abar"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="top_foo_t">
+		<xs:restriction base="xs:long">
+			<xs:minInclusive value="-5"/>
+			<xs:maxInclusive value="5"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="top_pac_t">
+		<xs:union>
+			<xs:simpleType>
+				<xs:restriction base="xs:boolean"/>
+			</xs:simpleType>
+			<xs:simpleType>
+				<xs:union>
+					<xs:simpleType>
+						<xs:restriction base="xs:unsignedByte">
+							<xs:minInclusive value="0"/>
+							<xs:maxInclusive value="0"/>
+						</xs:restriction>
+					</xs:simpleType>
+					<xs:simpleType>
+						<xs:restriction base="xs:unsignedByte">
+							<xs:minInclusive value="1"/>
+							<xs:maxInclusive value="1"/>
+						</xs:restriction>
+					</xs:simpleType>
+					<xs:simpleType>
+						<xs:restriction base="xs:unsignedByte">
+							<xs:minInclusive value="2"/>
+							<xs:maxInclusive value="2"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:union>
+			</xs:simpleType>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="yes"/>
+					<xs:enumeration value="no"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:union>
+	</xs:simpleType>
+	<xs:simpleType name="top_bar_t">
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+	<xs:simpleType name="top_barstr_t">
+		<xs:union>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:minLength value="2"/>
+					<xs:maxLength value="2"/>
+				</xs:restriction>
+			</xs:simpleType>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:minLength value="7"/>
+					<xs:maxLength value="8"/>
+				</xs:restriction>
+			</xs:simpleType>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:minLength value="10"/>
+					<xs:maxLength value="10"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:union>
+	</xs:simpleType>
+	<xs:simpleType name="top_baz_t">
+		<xs:restriction base="xs:decimal">
+			<xs:fractionDigits value="18"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="top_mek_t">
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+	<xs:simpleType name="top_top_top_e_t">
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+</xs:schema>

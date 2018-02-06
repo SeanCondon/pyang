@@ -1,0 +1,33 @@
+module identitiesA {
+  namespace "http://example.com/identitiesA";
+  prefix a;
+
+  identity base-id-type1;
+
+  identity base-id-type2;
+
+  identity l2-b1-id-1 {
+    base base-id-type1;
+  }
+
+  identity l2-b1-id-2 {
+    base base-id-type1;
+  }
+
+  identity l3-b1-b2-id-1 {
+    base l2-b1-id-2;
+  }
+
+  identity l3-b1-b2-id-2 {
+    base l2-b1-id-2;
+  }
+
+  identity l2-b2-id-1 {
+    base base-id-type2;
+  }
+
+  identity l2-b2-id-2 {
+    base base-id-type2;
+  }
+
+}

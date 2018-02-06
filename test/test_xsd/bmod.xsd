@@ -1,0 +1,104 @@
+<?xml version="1.0" ?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://example.com/b" version="1.0" xmlns:b="http://example.com/b" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:attributeGroup name="yang-annotations">
+		<xs:attribute name="quux">
+			<xs:simpleType>
+				<xs:annotation>
+					<xs:documentation xml:lang="en">This is an annotation that can be added to all attributes in this module</xs:documentation>
+				</xs:annotation>
+				<xs:restriction base="xs:unsignedByte"/>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:attributeGroup>
+	<xs:complexType name="subtop_baz_t">
+		<xs:simpleContent>
+			<xs:extension base="b:subtop_baz_tb">
+				<xs:attributeGroup ref="b:yang-annotations"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:simpleType name="subtop_baz_tb">
+		<xs:union>
+			<xs:simpleType>
+				<xs:restriction base="xs:unsignedByte"/>
+			</xs:simpleType>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:pattern value="0x[0-9a-fA-F]{1,2}"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:union>
+	</xs:simpleType>
+	<xs:complexType name="subtop_pac_t">
+		<xs:sequence>
+			<xs:element maxOccurs="1" minOccurs="0" name="k1" type="b:subtop_pac_k1_t"/>
+			<xs:element maxOccurs="1" minOccurs="0" name="k2" type="b:subtop_pac_k2_t"/>
+			<xs:element maxOccurs="1" minOccurs="0" name="pusu" type="b:subtop_pac_pusu_t"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="subtop_pac_k1_t">
+		<xs:simpleContent>
+			<xs:extension base="b:subtop_pac_k1_tb">
+				<xs:attributeGroup ref="b:yang-annotations"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:simpleType name="subtop_pac_k1_tb">
+		<xs:restriction base="xs:unsignedByte"/>
+	</xs:simpleType>
+	<xs:complexType name="subtop_pac_k2_t">
+		<xs:simpleContent>
+			<xs:extension base="b:subtop_pac_k2_tb">
+				<xs:attributeGroup ref="b:yang-annotations"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:simpleType name="subtop_pac_k2_tb">
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+	<xs:complexType name="subtop_pac_pusu_t">
+		<xs:simpleContent>
+			<xs:extension base="b:subtop_pac_pusu_tb">
+				<xs:attributeGroup ref="b:yang-annotations"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:simpleType name="subtop_pac_pusu_tb">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="a:bogus"/>
+			<xs:enumeration value="a:foo"/>
+			<xs:enumeration value="b:iden1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:element name="bar" type="b:top_bar_t"/>
+	<xs:complexType name="top_bar_t">
+		<xs:simpleContent>
+			<xs:extension base="b:top_bar_tb">
+				<xs:attributeGroup ref="b:yang-annotations"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:simpleType name="top_bar_tb">
+		<xs:union>
+			<xs:simpleType>
+				<xs:restriction base="xs:unsignedByte"/>
+			</xs:simpleType>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:pattern value="0x[0-9a-fA-F]{1,2}"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:union>
+	</xs:simpleType>
+	<xs:element name="abar" type="b:top_abar_t"/>
+	<xs:complexType name="top_abar_t">
+		<xs:simpleContent>
+			<xs:extension base="b:top_abar_tb">
+				<xs:attributeGroup ref="b:yang-annotations"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:simpleType name="top_abar_tb">
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+</xs:schema>
