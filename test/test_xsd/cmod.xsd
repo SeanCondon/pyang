@@ -1,0 +1,28 @@
+<?xml version="1.0" ?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://example.com/c" version="1.0" xmlns:c="http://example.com/c" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:attributeGroup name="yang-annotations">
+		<xs:attribute name="idann">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="c:base-id"/>
+					<xs:enumeration value="c:derived-id"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="iiann">
+			<xs:simpleType>
+				<xs:restriction base="xs:string"/>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="strann">
+			<xs:simpleType>
+				<xs:restriction base="xs:string"/>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="u64ann">
+			<xs:simpleType>
+				<xs:restriction base="xs:unsignedLong"/>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:attributeGroup>
+</xs:schema>

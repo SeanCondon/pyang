@@ -1,0 +1,33 @@
+module identitiesC {
+  namespace "http://example.com/identitiesC";
+  prefix c;
+
+  import identitiesA {
+    prefix a;
+  }
+
+  import identitiesB {
+    prefix b;
+  }
+
+  identity l3-b2a-id-2 {
+    base b:l2-b2a-id-2;
+  }
+
+  container test-cont {
+
+    list test-list-item {
+       key test-list-id;
+
+       leaf test-list-id {
+         type uint8;
+       }
+
+       leaf testid {
+        type identityref {
+          base a:base-id-type2;
+        }
+       }
+    }
+  }
+}

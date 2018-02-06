@@ -1,0 +1,32 @@
+<?xml version="1.0" ?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://example.com/identitiesC" version="1.0" xmlns:c="http://example.com/identitiesC" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:element name="test-cont" type="c:test-cont_t">
+		<xs:key name="test-cont_test-list-item_k">
+			<xs:selector xpath="./c:test-list-item"/>
+			<xs:field xpath="c:test-list-id"/>
+		</xs:key>
+	</xs:element>
+	<xs:complexType name="test-cont_t">
+		<xs:sequence>
+			<xs:element maxOccurs="unbounded" minOccurs="0" name="test-list-item" type="c:test-cont_test-list-item_t"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="test-cont_test-list-item_t">
+		<xs:sequence>
+			<xs:element maxOccurs="1" minOccurs="1" name="test-list-id" type="c:test-cont_test-list-item_test-list-id_t"/>
+			<xs:element maxOccurs="1" minOccurs="0" name="testid" type="c:test-cont_test-list-item_testid_t"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="test-cont_test-list-item_test-list-id_t">
+		<xs:restriction base="xs:unsignedByte"/>
+	</xs:simpleType>
+	<xs:simpleType name="test-cont_test-list-item_testid_t">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="a:base-id-type2"/>
+			<xs:enumeration value="a:l2-b2-id-2"/>
+			<xs:enumeration value="a:l2-b2-id-1"/>
+			<xs:enumeration value="b:l2-b2a-id-2"/>
+			<xs:enumeration value="l3-b2a-id-2"/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>
