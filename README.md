@@ -3,7 +3,8 @@
 
 ## News ##
 **2018-02-06 - Version 1.7.3 bis**
-Added in XSD Plugin
+  * Forked this from the original pyang on 5Feb18 because original did not want to accept the xsd plugin
+  * Added in XSD Plugin under pyang/plugins/xsd and associated tests under tests/test_xsd
 
 **2017-06-27 - Version 1.7.3 released**
 
