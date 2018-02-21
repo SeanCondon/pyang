@@ -1,6 +1,7 @@
-# Copyright (c) 2015 by Ladislav Lhotka, CZ.NIC <lhotka@nic.cz>
+# Copyright (c) 2018 by Sean Condon <sean.condon@posteo.net>
+# Based off jtox plugin by Ladislav Lhotka, CZ.NIC <lhotka@nic.cz>
 #
-# Pyang plugin generating a driver file for JSON->XML translation.
+# Pyang plugin generating metadata that can be used by YangUiComponents
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -14,11 +15,10 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-"""JTOX output plugin
+"""JTOXX output plugin
 
 This plugin takes a YANG data model and produces a JSON driver file
-that can be used by the *json2xml* script for translating a valid JSON
-configuration or state data to XML.
+that can be used by YangUiComponents set of Angular Web Components
 """
 
 import os
@@ -28,12 +28,12 @@ from pyang import plugin, statements, error
 from pyang.util import unique_prefixes
 
 def pyang_plugin_init():
-    plugin.register_plugin(JtoXPlugin())
+    plugin.register_plugin(JtoXXPlugin())
 
-class JtoXPlugin(plugin.PyangPlugin):
+class JtoXXPlugin(plugin.PyangPlugin):
     def add_output_format(self, fmts):
         self.multiple_modules = True
-        fmts['jtox'] = self
+        fmts['jtoxx'] = self
 
     def setup_fmt(self, ctx):
         ctx.implicit_errors = False
@@ -43,7 +43,7 @@ class JtoXPlugin(plugin.PyangPlugin):
         """
         for (epos, etag, eargs) in ctx.errors:
             if error.is_error(error.err_level(etag)):
-                raise error.EmitError("JTOX plugin needs a valid module")
+                raise error.EmitError("JTOXX plugin needs a valid module")
         tree = {}
         mods = {}
         annots = {}
@@ -72,30 +72,32 @@ class JtoXPlugin(plugin.PyangPlugin):
             else:
                 nmod = ch.i_module.i_modulename
                 nodename = "%s:%s" % (nmod, ch.arg)
-            ndata = [ch.keyword]
+            ndataDict = {}
+            ndataDict["nodeType"]=ch.keyword
+            description=ch.search_one("description")
+            if (ch.search_one("description") is not None):
+                ndataDict["description"]=description.arg
+            if (ch.search_one("reference") is not None):
+                ndataDict['reference'] = ch.search_one("reference").arg;
+            if (ch.search_one("config") is not None):
+                ndataDict['config'] = False if (ch.search_one("config").arg == "false") else True;
+            ndata = [ndataDict]
             if ch.keyword == "container":
-                ndata.append({})
-                self.process_children(ch, ndata[1], nmod)
+                self.process_children(ch, ndataDict, nmod)
             elif ch.keyword == "list":
-                ndata.append({})
-                self.process_children(ch, ndata[1], nmod)
+                self.process_children(ch, ndataDict, nmod)
                 ndata.append([(k.i_module.i_modulename, k.arg)
                               for k in ch.i_key])
             elif ch.keyword in ["leaf", "leaf-list"]:
-                ndata.append(self.base_type(ch.search_one("type")))
-                leafattrs = {}
-                if (ch.search_one("description") is not None):
-                    leafattrs['description'] = ch.search_one("description").arg;
-                if (ch.search_one("reference") is not None):
-                    leafattrs['reference'] = ch.search_one("reference").arg;
-                if (ch.search_one("config") is not None):
-                    leafattrs['config'] = False if (ch.search_one("config").arg == "false") else True;
+                ndataDict["dataType"]=self.base_type(ch.search_one("type"))
+                # if (ch.search_one("description") is not None):
+                #     leafattrs['description'] = ch.search_one("description").arg;
                 if (ch.search_one("default") is not None):
-                    leafattrs['default'] = ch.search_one("default").arg;
+                    ndataDict['default'] = ch.search_one("default").arg;
                 if (ch.search_one("mandatory") is not None):
-                    leafattrs['mandatory'] = False if (ch.search_one("mandatory").arg == "false") else True;
-                if (len(leafattrs) > 0):
-                    ndata.append(leafattrs);
+                    ndataDict['mandatory'] = False if (ch.search_one("mandatory").arg == "false") else True;
+                if (ch.search_one("units") is not None):
+                    ndataDict['units'] = ch.search_one("units").arg;
             modname = ch.i_module.i_modulename
             parent[nodename] = ndata
 
@@ -109,33 +111,30 @@ class JtoXPlugin(plugin.PyangPlugin):
             else:
                 node = type.i_typedef
             type = node.search_one("type")
+
+        arr = []
+        dict = {};
+        dict['type'] = type.arg
+        arr.append(dict)
         if type.arg == "decimal64":
-            decarr = [type.arg]
-            decdict = {};
-            decdict["fraction-digits"] = int(type.search_one("fraction-digits").arg)
+            dict["fraction-digits"] = int(type.search_one("fraction-digits").arg)
             range = type.search_one("range")
             if (range is not None):
-                decdict["range"] = str(type.search_one("range").arg)
-            decarr.append(decdict)
-            return decarr
+                dict["range"] = str(type.search_one("range").arg)
+            return arr
         elif type.arg in ["uint8", "uint16", "uint32", "uint64"]:
-            intarr = [type.arg]
-            intdict = {}
             range = type.search_one("range")
             if (range is not None):
-                intdict["range"] = str(type.search_one("range").arg)
-            intarr.append(intdict)
-            return intarr
+                dict["range"] = str(type.search_one("range").arg)
+            return arr
         elif type.arg == "string":
-            strarr = [type.arg]
-            strdict = {}
             len = type.search_one("length")
             if (len is not None):
-                strdict["length"] = str(type.search_one("length").arg)
+                dict["length"] = str(len.arg)
             pattern = type.search_one("pattern");
             if (pattern is not None):
-                strarr["pattern"] = str(type.search_one("pattern").arg)
-            return strarr
+                arr["pattern"] = str(pattern.arg)
+            return arr
         elif type.arg == "union":
             return [type.arg, [self.base_type(x) for x in type.i_type_spec.types]]
         else:
