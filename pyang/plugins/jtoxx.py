@@ -86,8 +86,12 @@ class JtoXXPlugin(plugin.PyangPlugin):
                 self.process_children(ch, ndataDict, nmod)
             elif ch.keyword == "list":
                 self.process_children(ch, ndataDict, nmod)
-                ndata.append([(k.i_module.i_modulename, k.arg)
+                ndataDict['keys'] = ([(k.arg)
                               for k in ch.i_key])
+                if (ch.search_one("min-elements") is not None):
+                    ndataDict['min-elements'] = ch.search_one("max-elements").arg;
+                if (ch.search_one("max-elements") is not None):
+                    ndataDict['max-elements'] = ch.search_one("max-elements").arg;
             elif ch.keyword in ["leaf", "leaf-list"]:
                 ndataDict["dataType"]=self.base_type(ch.search_one("type"))
                 # if (ch.search_one("description") is not None):
@@ -133,7 +137,7 @@ class JtoXXPlugin(plugin.PyangPlugin):
                 dict["length"] = str(len.arg)
             pattern = type.search_one("pattern");
             if (pattern is not None):
-                arr["pattern"] = str(pattern.arg)
+                dict["pattern"] = str(pattern.arg)
             return arr
         elif type.arg == "union":
             return [type.arg, [self.base_type(x) for x in type.i_type_spec.types]]
