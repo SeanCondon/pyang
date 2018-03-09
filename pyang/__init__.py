@@ -15,8 +15,8 @@ from . import util
 from . import statements
 from . import syntax
 
-__version__ = '1.7.3'
-__date__ = '2017-06-27'
+__version__ = '1.7.4'
+__date__ = '2018-02-23'
 
 class Context(object):
     """Class which encapsulates a parse session"""
@@ -45,7 +45,6 @@ class Context(object):
         self.features = {}
         self.max_status = None
         self.keep_comments = False
-        self.ensure_hyphenated_names = False
 
         for mod, rev, handle in self.repository.get_modules_and_revisions(self):
             if mod not in self.revs:

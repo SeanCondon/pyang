@@ -656,12 +656,6 @@ def _chk_stmts(ctx, pos, stmts, parent, spec, canonical):
                               (stmt.arg, ctx.max_identifier_len))
                 # recoverable error
                 stmt.is_grammatically_valid = True
-            elif ((arg_type == 'identifier' or arg_type == 'enum-arg') and
-                  ctx.ensure_hyphenated_names
-                  and util.not_hyphenated(stmt.arg)):
-                error.err_add(ctx.errors, stmt.pos, 'NOT_HYPHENATED', stmt.arg)
-                # recoverable error
-                stmt.is_grammatically_valid = True                
             else:
                 stmt.is_grammatically_valid = True
 
@@ -820,8 +814,18 @@ def sort_canonical(keyword, stmts):
     # keep the order of data definition statements and case
     keep = [s[0] for s in data_def_stmts] + ['case']
     for (kw, _spec) in flatten_spec(subspec):
-        res.extend([stmt for stmt in stmts if (stmt.keyword == kw and
-                                               kw not in keep)])
+        # keep comments before a statement together with that statement
+        comments = []
+        for s in stmts:
+            if s.keyword == '_comment':
+                comments.append(s)
+            elif s.keyword == kw and kw not in keep:
+                res.extend(comments)
+                comments = []
+                res.append(s)
+            else:
+                comments = []
+
     # then copy all other statements (extensions)
     res.extend([stmt for stmt in stmts if stmt not in res])
     return res
