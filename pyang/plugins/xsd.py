@@ -197,7 +197,7 @@ class XsdPlugin(plugin.PyangPlugin):
                 self.simple_type(elemName, ch, self.elem_name(elemName)[0],elem,ancestors)
             elif ch.keyword in ["choice"]:
                 chEleme = ET.SubElement(elemParent, XSNSB+"choice")
-                self.process_children(ch, elemName, data_parent, chEleme, ancestors)
+                self.process_children(ch, elemName, None, chEleme, ancestors)
             elif ch.keyword in ["case"]:
                 seqEleme = ET.SubElement(elemParent, XSNSB+"sequence")
                 self.process_children(ch, elemName, data_parent, seqEleme, ancestors)
@@ -212,18 +212,25 @@ class XsdPlugin(plugin.PyangPlugin):
                 # seqEleme = ET.SubElement(elemParent, XSNSB+"any",id=ch.arg,maxOccurs="unbounded",processContents="lax")
             else:
                 if self.verbose==True: print("Unexpected node:"+str(name)+", Type:"+str(ch.keyword))
-        if len(ancestors)>0: ancestors.pop()
+        if parent is not None and len(ancestors)>0:
+            ancestors.pop()
 
     def addListKeyAttr(self, elemName, key,ancestors):
         pfx=self.elem_name(elemName)[0]
         name=self.elem_name(elemName)[1]
         keyName=self.type_name(":",ancestors,False)
-        if len(ancestors)==0: return
+        if len(ancestors)==0:
+            return
+        elif self.verbose:
+            print("No ancestors found for ", elemName)
+
         exists = schemata[pfx].find(".//xs:element[@name='"+ancestors[-1].arg+"']", xsNamespace)
         if exists is not None:
             keyElem=ET.SubElement(exists, XSNSB+"key", name=keyName+name+"_k")
             ET.SubElement(keyElem, XSNSB+"selector", xpath="./"+elemName)
             ET.SubElement(keyElem, XSNSB+"field", xpath=pfx+":"+key.arg)
+        elif self.verbose:
+            print("Element not found for", ancestors[-1].arg, "when adding key for", elemName)
 
 
     def checkNumberElems(self,ch):
