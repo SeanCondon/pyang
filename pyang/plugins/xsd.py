@@ -200,7 +200,7 @@ class XsdPlugin(plugin.PyangPlugin):
                 self.process_children(ch, elemName, None, chEleme, ancestors)
             elif ch.keyword in ["case"]:
                 seqEleme = ET.SubElement(elemParent, XSNSB+"sequence")
-                self.process_children(ch, elemName, data_parent, seqEleme, ancestors)
+                self.process_children(ch, elemName, None, seqEleme, ancestors)
             elif ch.keyword in ["anyxml"]:
                 comment1 = ET.Comment('Note XSD 1.0 does not support <xs:any/> inside '+
                          'the same container (sequence) as other elements. A solution '+
