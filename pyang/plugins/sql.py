@@ -20,7 +20,7 @@ type_class = dict([
     ("uint64","INTEGER"),
     ("decimal64","FLOAT"),
     ("boolean","INTEGER"),
-    ("enumeration","INTEGER"),
+    ("enumeration","TEXT"),
     ("binary","TEXT")])
 
 type_class.update((t,"TEXT") for t in
@@ -77,13 +77,13 @@ class SqlPlugin(plugin.PyangPlugin):
             else:
                 continue
             yam.i_children.remove(ch)
-        self.process_tables(yam, self.real_prefix[yam])
+        self.process_tables(yam, self.real_prefix[yam], toplevel=True)
 
-    def process_tables(self, node, prefix, childtables=[], childlisttables=[]):
+    def process_tables(self, node, prefix, childtables=[], childlisttables=[], ancestors=[], toplevel=False):
         """Process all children of `node`."""
         chs = node.i_children
         for ch in chs:
-            if ch.keyword in ['leaf', 'leaf-list']:
+            if ch.keyword in ['leaf']:
                 continue
             cfg = ch.search_one("config")
             if cfg is not None and cfg.arg == "false":
@@ -93,45 +93,74 @@ class SqlPlugin(plugin.PyangPlugin):
                 print("Processing C: ", end="")
                 print(ch.arg+"("+ch.keyword+")")
 
+            if not toplevel:  # Leave out the module name from ancestors
+                ancestors.append(node.arg.replace("-", "_"))
             if ch.keyword in ['container']:
-                childtables.append(ch.arg)
+                childtables.append(ch)
                 children = []
                 childrenlist = []
-                self.process_tables(ch, prefix, children, childrenlist)
-                cols = self.process_columns(ch, childtables=children)
-                sqlcreatetable = sqlcreatetable + self.underscore(ch.arg) + cols + ";"
+                self.process_tables(ch, prefix, children, childrenlist, ancestors)
+                ancestors.append(ch.arg.replace("-", "_"))  # Temporarily add it in
+                cols = self.process_columns(ch, childtables=children, ancestors=ancestors)
+                ancestors.pop()
+                sqlcreatetable = "\n--container" + sqlcreatetable + self.underscore(ch.arg, ancestors) + cols + ";"
                 if len(children) > 0:
-                    sqldeletetrigger = "\nCREATE TRIGGER " + self.underscore(ch.arg) + \
-                                       "_dt AFTER DELETE ON " + self.underscore(ch.arg) + "\nBEGIN"
+                    sqldeletetrigger = "\nCREATE TRIGGER " + self.underscore(ch.arg, ancestors) + \
+                                       "_dt AFTER DELETE ON " + self.underscore(ch.arg, ancestors) + "\nBEGIN"
+                    ancestors.append(ch.arg.replace("-", "_"))  # Temporarily add it in
                     for table in children:
-                        triggerdelete = "\n    DELETE FROM " + self.underscore(table) + " WHERE revision = OLD.revision;"
+                        triggerdelete = "\n    DELETE FROM " + self.underscore(table.arg, ancestors) +\
+                                        " WHERE revision = OLD.revision;"
                         sqldeletetrigger += triggerdelete
                     for table in childrenlist:
-                        triggerdelete = "\n    DELETE FROM " + self.underscore(table) + " WHERE revision = OLD.revision;"
+                        triggerdelete = "\n    DELETE FROM " + self.underscore(table, ancestors) +\
+                                        " WHERE revision = OLD.revision;"
                         sqldeletetrigger += triggerdelete
+                    ancestors.pop()
                     sqldeletetrigger += "\nEND;"
                     sqlcreatetable += sqldeletetrigger
 
             elif ch.keyword in ['list']:
                 childlisttables.append(ch.arg)
                 keys = ch.search("key")
-                cols = self.process_columns(ch, keys=keys)
-                sqlcreatetable = sqlcreatetable + self.underscore(ch.arg) + cols + ";\n"
-                self.process_tables(ch, prefix)
+                cols = self.process_columns(ch, keys=keys, ancestors=ancestors, parentkeys=self.getparentkeys(node))
+                sqlcreatetable = "\n--list" + sqlcreatetable + self.underscore(ch.arg, ancestors) + cols + ";\n"
+                self.process_tables(ch, prefix, ancestors=ancestors)
+
+            elif ch.keyword in ['leaf-list']:
+                childlisttables.append(ch.arg)
+                keys = [ch]
+                cols = self.process_columns(ch, keys=keys, ancestors=ancestors, parentkeys=self.getparentkeys(node))
+                sqlcreatetable = "\n--leaf-list" + sqlcreatetable + self.underscore(ch.arg, ancestors) + cols + ";\n"
+
+            elif ch.keyword in ['choice']:
+                sqlcreatetable = ""
+                for case in ch.i_children:
+                    for caseelem in case.i_children:
+                        print("Processing choice:case:elem", ch.arg, case.arg, caseelem.arg)
+                        if caseelem.keyword in ['container', 'list', 'leaf-list']:
+                            self.process_tables(case, prefix, ancestors=ancestors)
 
             self.outputDoc += "\n" + sqlcreatetable
             if self.verbose:
                 print(sqlcreatetable)
+            if len(ancestors) > 0:
+                ancestors.pop()
 
-    def process_columns(self, node, keys=[], childtables=[]):
-        chs = node.i_children
+    def process_columns(self, node, keys=[], childtables=[], ancestors=[], parentkeys=[]):
+        chs = []
         columns = []
-        rev = "\n    revision INTEGER NOT NULL";
+        if node.keyword in ['leaf-list']:
+            chs = [node]
+        else:
+            chs = node.i_children
         if len(keys) == 0:
-            rev = rev + " PRIMARY KEY"
-        columns.append(rev)
+            rev = "revision INTEGER NOT NULL PRIMARY KEY";
+            columns.append(rev)
+
         for ch in chs:
-            if ch.keyword in ['container', 'list']:
+            if ch.keyword in ['container', 'list'] or \
+                    (ch.keyword in ['leaf-list'] and node.keyword not in ['leaf-list']):
                 continue
             cfg = ch.search_one("config")
             if cfg is not None and cfg.arg == "false":
@@ -139,43 +168,70 @@ class SqlPlugin(plugin.PyangPlugin):
             if self.verbose:
                 print("Processing F: ", end="")
                 print(ch.arg+"("+ch.keyword+")")
-            if ch.keyword in ['leaf']:
+            if ch.keyword in ['leaf', 'leaf-list']:
                 column = self.create_sql_column(ch)
-                columns.append(self.underscore(column))
-            elif ch.keyword in ['leaf-list']:
-                # TODO: not yet supported
-                None
+                columns.append(column)
+            elif ch.keyword in ['choice']:
+                for case in ch.i_children:
+                    for caseelem in case.i_children:
+                        if caseelem.keyword in ['leaf']:
+                            print("Processing choice:case:leaf", ch.arg, case.arg, caseelem.arg)
+                            column = self.create_sql_column(caseelem)
+                            columns.append(self.underscore(column))
+
+            else:
+                print("Unexpected type", ch.keyword, "when processing", ch.arg)
         for ct in childtables:
-            columns.append(self.underscore(ct) + "_fk INTEGER NOT NULL")
+            definefk = self.underscore(ct.arg) + "_fk INTEGER"
+            if not ct.search_one("presence"):
+                definefk += " NOT NULL"
+            columns.append(definefk)
 
         for ct in childtables:  # All of the Foreign key constraints must come after the columns
-            columns.append("FOREIGN KEY (" + self.underscore(ct) + "_fk) REFERENCES " +
-                           self.underscore(ct) + "(revision)")
+            columns.append("FOREIGN KEY (" + self.underscore(ct.arg) + "_fk) REFERENCES " +
+                           self.underscore(ct.arg, ancestors) + "(revision)")
+
+        pk_constraint = "CONSTRAINT " + self.underscore(node.arg) + "_pk PRIMARY KEY ("
+
+        for pkey in parentkeys:
+            fk_constraint1 = self.underscore(pkey['name']) + "_fk " + pkey['type'] + " NOT NULL"
+            columns.append(fk_constraint1)
+            pk_constraint += self.underscore(pkey['name']) + "_fk, "
+        for pkey in parentkeys:
+            fk_constraint2 = "FOREIGN KEY(" + self.underscore(pkey['name']) + "_fk) REFERENCES " + \
+                             self.underscore(None, ancestors) + "(" + self.underscore(pkey['name']) + ")"
+            columns.append(fk_constraint2)
 
         if len(keys) > 0:  # In the case of lists need to add a compound primary key
-            pk_constraint = "CONSTRAINT " + node.arg + "_pk PRIMARY KEY (revision, "
             for key in keys:
-                pk_constraint += key.arg
+                pk_constraint += self.underscore(key.arg)
             pk_constraint += ")"
-            columns.append(self.underscore(pk_constraint))
+            columns.append(pk_constraint)
 
-        return " (" + ",\n    ".join(columns) + "\n)"
+        return " (\n    " + ",\n    ".join(columns) + "\n)"
 
     def create_sql_column(self, node):
         default = node.search_one("default")
 
         types=self.get_types(node)
         unionElem=None
+        columndef = self.underscore(node.arg)
         if len(types)>1:
-            return type_class["union - not supported"]
+            columndef += " TEXT"
             # unionElem = ET.SubElement(stEleme, XSNSB+"union")
         for ftyp in types:
             # if unionElem is not None:
                 # stEleme=ET.SubElement(unionElem, XSNSB+"simpleType")
-            return node.arg + " " + type_class[ftyp.arg]
+            columndef += (" " + type_class[ftyp.arg])
 
-    def get_types(self, node):
+        if node.search_one("mandatory"):
+            columndef += " NOT NULL"
+        return columndef
+
+    @staticmethod
+    def get_types(node):
         res = []
+
         def resolve(typ):
             if typ.arg == "union":
                 for ut in typ.i_type_spec.types: resolve(ut)
@@ -190,5 +246,30 @@ class SqlPlugin(plugin.PyangPlugin):
             resolve(typ)
         return res
 
-    def underscore(self, name):
-        return name.replace("-", "_")
+    @staticmethod
+    def underscore(name, ancestors=[]):
+        result=""
+        if name is None:
+            result = "_".join(ancestors)
+        elif len(ancestors) == 0:
+            result = name.replace("-", "_")
+        else:
+            result = "_".join(ancestors) + "_" + name.replace("-", "_")
+
+        if result in ['group', 'create', 'insert', 'select']:  # Also remove SQLite keywords
+            result = result + "1"
+        return result
+
+    @staticmethod
+    def getparentkeys(parentnode):
+        parentkeys = list()
+        parentkeys.append({"name": "revision", "type": "INTEGER"})
+        for k in parentnode.search("key"):
+            parentkey = dict()
+            parentkey["name"] = k.arg
+            # kattr = parentnode.i_children[k.arg]
+            # parentkey["type"] = type_class[SqlPlugin.get_types(kattr)]
+            parentkey["type"] = "TEXT"
+            parentkeys.append(parentkey)
+
+        return parentkeys
