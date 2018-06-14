@@ -3,11 +3,19 @@ import copy
 ### struct to keep track of position for error messages
 
 class Position(object):
+    __slots__ = (
+        'ref',
+        'line',
+        'top',
+        'uses_pos',
+    )
+
     def __init__(self, ref):
         self.ref = ref
         self.line = 0
         self.top = None
         self.uses_pos = None
+
     def __str__(self):
         s = self.ref + ':' + str(self.line)
         if self.uses_pos is None:
@@ -75,11 +83,11 @@ error_codes = \
        'unexpected keyword "%s", expected one of %s'),
     'UNEXPECTED_KEYWORD_CANONICAL':
       (1,
-       'keyword "%s" not in canonical order, (See RFC 6020, Section 12)'),
+       'keyword "%s" not in canonical order (see RFC 6020, Section 12)'),
     'UNEXPECTED_KEYWORD_CANONICAL_1':
       (1,
        'keyword "%s" not in canonical order,'
-       'expected "%s", (See RFC 6020, Section 12)'),
+       'expected "%s" (see RFC 6020, Section 12)'),
     'EXPECTED_ARGUMENT':
       (1,
        'expected an argument for keyword "%s"'),
@@ -88,7 +96,8 @@ error_codes = \
        'did not expect an argument, got "%s"'),
     'XML_IDENTIFIER':
       (3,
-       'illegal identifier "%s", must not start with [xX][mM][lL]'),
+       'illegal identifier "%s", must not start with [xX][mM][lL] in'
+       'YANG version 1 (see RFC 6020, Section 12)'),
     'TRAILING_GARBAGE':
       (2,
        'trailing garbage after module'),

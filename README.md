@@ -2,12 +2,22 @@
 [![Coverage Status](https://coveralls.io/repos/mbj4668/pyang/badge.svg)](https://coveralls.io/r/mbj4668/pyang)
 
 ## News ##
-**2018-02-06 - Version 1.7.4 bis** Sean Condon
+**2018-06-14 - Version 1.7.5 bis** Sean Condon
   * Forked this from the original pyang on 5Feb18 because original did not want to accept the xsd plugin
   * Added in XSD Plugin as pyang/plugins/xsd.py and associated tests under tests/test_xsd
   * Added in JtoXX Plugin as pyang/plugins/jtoxx.py
+  * Added in SQL plugin
 
-**2018-01-23 - Version 1.7.4 released**
+**2018-04-25 - Version 1.7.5 released**
+  * tree plugin updated to align with RFC 8340
+
+  * better formatting of YANG modules with -f yang
+
+  * reduced memory usage
+
+  * ... and various other enhancements and bug fixes, see CHANGES.
+
+**2018-02-23 - Version 1.7.4 released**
 
   * tree plugin updated to align with draft-ietf-netmod-yang-tree-diagrams-05
 

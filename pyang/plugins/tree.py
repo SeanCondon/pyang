@@ -1,5 +1,7 @@
 """Tree output plugin
 
+Compatible with RFC 8340.
+
 Idea copied from libsmi.
 """
 
@@ -151,8 +153,8 @@ def emit_tree(ctx, modules, fd, depth, llen, path):
             subm = ctx.get_module(i.arg)
             if subm is not None:
                 mods.append(subm)
+        section_delimiter_printed=False
         for m in mods:
-            section_delimiter_printed=False
             for augment in m.search('augment'):
                 if (hasattr(augment.i_target_node, 'i_module') and
                     augment.i_target_node.i_module not in modules + mods):
@@ -237,7 +239,7 @@ def emit_tree(ctx, modules, fd, depth, llen, path):
                         fd.write('\n')
                         section_delimiter_printed = True
                     fd.write("  yang-data %s:\n" % yd.arg)
-                    print_children(yd.i_children, module, fd, '    ', path,
+                    print_children(yd.i_children, module, fd, '  ', path,
                                    'yang-data', depth, llen,
                                    ctx.opts.tree_no_expand_uses)
 
@@ -449,7 +451,7 @@ def get_flags_str(s, mode):
     elif s.i_config == False or mode == 'output' or mode == 'notification':
         return 'ro'
     else:
-        return '--'
+        return ''
 
 def get_leafref_path(s):
     t = s.search_one('type')

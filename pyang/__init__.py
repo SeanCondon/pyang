@@ -15,8 +15,8 @@ from . import util
 from . import statements
 from . import syntax
 
-__version__ = '1.7.4'
-__date__ = '2018-02-23'
+__version__ = '1.7.5'
+__date__ = '2018-04-25'
 
 class Context(object):
     """Class which encapsulates a parse session"""
@@ -414,10 +414,21 @@ class FileRepository(Repository):
             if not pkgutil.find_loader('pip'):
                 return  # abort search if pip is not installed
 
-            import pip
-            location = pip.locations.distutils_scheme('pyang')
-            self.dirs.append(os.path.join(location['data'],
-                                          'share','yang','modules'))
+            # hack below to handle pip 10 internals
+            # if someone knows pip and how to fix this, it would be great!
+            location = None
+            try:
+                import pip.locations as locations
+                location = locations.distutils_scheme('pyang')
+            except:
+                try:
+                    import pip._internal.locations as locations
+                    location = locations.distutils_scheme('pyang')
+                except:
+                    pass
+            if location is not None:
+                self.dirs.append(os.path.join(location['data'],
+                                              'share','yang','modules'))
 
 
 
@@ -449,6 +460,7 @@ class FileRepository(Repository):
     # FIXME: bad strategy; when revisions are not used in the filename
     # this code parses all modules :(  need to do this lazily
     def _peek_revision(self, absfilename, format, ctx):
+        fd = None
         try:
             fd = io.open(absfilename, "r", encoding="utf-8")
             text = fd.read()
@@ -456,6 +468,10 @@ class FileRepository(Repository):
             return None
         except UnicodeDecodeError as ex:
             return None
+        finally:
+            if fd is not None:
+                fd.close()
+
         if format == 'yin':
             p = yin_parser.YinParser()
         else:
@@ -475,6 +491,7 @@ class FileRepository(Repository):
 
     def get_module_from_handle(self, handle):
         (format, absfilename) = handle
+        fd = None
         try:
             fd = io.open(absfilename, "r", encoding="utf-8")
             text = fd.read()
@@ -483,6 +500,9 @@ class FileRepository(Repository):
         except UnicodeDecodeError as ex:
             s = str(ex).replace('utf-8', 'utf8')
             raise self.ReadError(absfilename + ": unicode error: " + s)
+        finally:
+            if fd is not None:
+                fd.close()
 
         if format is None:
             format = util.guess_format(text)
