@@ -33,6 +33,13 @@ class Eof(Exception):
     """raised by tokenizer when end of file is detected"""
     pass
 
+class TransformError(Exception):
+    """raised by plugins to fail the transform() function"""
+
+    def __init__(self, msg="", exit_code=1):
+        self.msg = msg
+        self.exit_code = exit_code
+
 class EmitError(Exception):
     """raised by plugins to fail the emit() function"""
     def __init__(self, msg="", exit_code=1):
@@ -88,6 +95,9 @@ error_codes = \
       (1,
        'keyword "%s" not in canonical order,'
        'expected "%s" (see RFC 6020, Section 12)'),
+    'UNEXPECTED_KEYWORD_USES':
+      (1,
+       'unexpected keyword "%s" under "%s", defined at %s'),
     'EXPECTED_ARGUMENT':
       (1,
        'expected an argument for keyword "%s"'),
