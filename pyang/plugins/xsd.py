@@ -183,7 +183,7 @@ class XsdPlugin(plugin.PyangPlugin):
             if ch.keyword in ["list", "container"]:
                 #Top level element cannot contain min and max
                 stElem = self.add_child_elem(elem_parent, elemName, (elemParent is None),
-                    minElem,maxElem if ch.keyword in "list" else "1",ancestors=ancestors);
+                    minElem,"1" if ch.keyword in "container" else maxElem,ancestors=ancestors);
                 self.complex_type(ch, elemName, self.elem_name(elemName)[0],ancestors)
                 if ch.keyword in ["list"]:
                     self.addListKeyAttr(elemName, ch.search_one("key"),ancestors)
@@ -228,7 +228,8 @@ class XsdPlugin(plugin.PyangPlugin):
         if exists is not None:
             keyElem=ET.SubElement(exists, XSNSB+"key", name=keyName+name+"_k")
             ET.SubElement(keyElem, XSNSB+"selector", xpath="./"+elemName)
-            ET.SubElement(keyElem, XSNSB+"field", xpath=pfx+":"+key.arg)
+            for k in key.arg.split():
+                ET.SubElement(keyElem, XSNSB+"field", xpath=pfx+":"+k)
         elif self.verbose:
             print("Element not found for", ancestors[-1].arg, "when adding key for", elemName)
 
@@ -314,11 +315,16 @@ class XsdPlugin(plugin.PyangPlugin):
             return stEleme
         else:
             #If it's not in the same schema then add a ref
-            stEleme = ET.SubElement(elemParent, XSNSB+"element", minOccurs="0", ref=fullElemName)
+            stEleme = ET.SubElement(elemParent, XSNSB+"element", ref=fullElemName)
+            if min is not None and min != "1":
+                stEleme.attrib["minOccurs"]=min
+            if max is not None and max != "1":
+                stEleme.attrib["maxOccurs"]=max
             if pfx not in schemata:
                 self.load_module_now(pfx)
-            exists = schemata[pfx].find(".//xs:element[@name='"+self.elem_name(fullElemName)[1]+"']", xsNamespace)
+            exists = schemata[pfx].find("./xs:element[@name='"+self.elem_name(fullElemName)[1]+"']", xsNamespace)
             if exists is None:
+                self.add_import(pfx, pfxParent)
                 return ET.SubElement(schemata[pfx], XSNSB+"element", name=self.elem_name(fullElemName)[1], type=pfx+":"+elemName+"_t")
 
     def add_annotation_attr(self, prefix, elemParent):
@@ -524,6 +530,7 @@ class XsdPlugin(plugin.PyangPlugin):
                 keyElemType+=refName+"_"
             for a in ancestors:
                 keyref_anc+="/"+pfx+":"+a.arg
+                keyref_name=a.arg+"_"+keyref_name
             krXpath="."+keyref_anc
         elif keypath.startswith("../"):
             for part in splitparts[::-1]: #Reverse - work backwards through xpath
@@ -556,7 +563,8 @@ class XsdPlugin(plugin.PyangPlugin):
             # self.add_import(pfx, node)
             keyRefElem=ET.SubElement(exists, XSNSB+"keyref", name=keyref_name, refer=refPfx+":"+keyref+"k")
             ET.SubElement(keyRefElem, XSNSB+"selector", xpath=krXpath)
-            ET.SubElement(keyRefElem, XSNSB+"field", xpath=pfx+":"+node.arg)
+            for k in node.arg.split():
+                ET.SubElement(keyRefElem, XSNSB+"field", xpath=pfx+":"+k)
             return keyRefElem
         else:
             print("Error could not find key with type:"+keyElemType)
