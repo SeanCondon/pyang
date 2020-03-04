@@ -107,9 +107,58 @@ pyang is compatible with the following IETF RFCs:
 
 ## Usage ##
 
+<<<<<<< HEAD
 ```sh
 pyang -h
 ```
+=======
+---
+
+
+## Documentation ##
+
+See [Documentation](https://github.com/mbj4668/pyang/wiki/Documentation).
+
+
+---
+
+## Previous releases ##
+
+**2018-06-14 - Version 1.7.5 bis** Sean Condon
+  * Forked this from the original pyang on 5Feb18 because original did not want to accept the xsd plugin
+  * Added in XSD Plugin as pyang/plugins/xsd.py and associated tests under tests/test_xsd
+  * Added in JtoXX Plugin as pyang/plugins/jtoxx.py
+  * Added in SQL plugin
+
+**2018-04-25 - Version 1.7.5 released**
+
+  * tree plugin updated to align with RFC 8340
+
+  * better formatting of YANG modules with -f yang
+
+  * reduced memory usage
+
+  * ... and various other enhancements and bug fixes, see CHANGES.
+
+**2018-02-23 - Version 1.7.4 released**
+
+  * tree plugin updated to align with draft-ietf-netmod-yang-tree-diagrams-05
+
+  * ... and various other enhancements and bug fixes, see CHANGES.
+
+**2017-06-27 - Version 1.7.3 released**
+
+  * Handle multiple rc:yang-data statements.  This bug caused
+    validation of ietf-restconf, or any module that imported
+    ietf-restconf, to fail.
+
+**2017-06-14 - Version 1.7.2 released**
+
+  * Added support for external plugins, using setuptools entry_points,
+    with the entry point "pyang.plugin".
+
+  * ... and various other enhancements and bug fixes, see CHANGES.
+>>>>>>> d24041142619ede866656e103af969b45fecbb0f
 
 or
 

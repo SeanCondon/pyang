@@ -31,4 +31,6 @@ schemas.xml
 /test/test_json/test-data-new.json
 /test/test_json/test-data.xml
 /test/test_xsd/*.xsd
+.idea
 /test/test_*/out/
+
