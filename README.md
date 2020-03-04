@@ -1,7 +1,7 @@
 # pyang #
 
-> Fork updated by Sean on 04-Mar-2020
 ## News ##
+> Fork updated by Sean on 04-Mar-2020
 
 [![Release](https://img.shields.io/github/v/release/mbj4668/pyang)](https://github.com/mbj4668/pyang/releases) [![Build Status](https://travis-ci.org/mbj4668/pyang.svg?branch=master)](https://travis-ci.org/mbj4668/pyang) [![Coverage Status](https://coveralls.io/repos/mbj4668/pyang/badge.svg)](https://coveralls.io/r/mbj4668/pyang)
 
